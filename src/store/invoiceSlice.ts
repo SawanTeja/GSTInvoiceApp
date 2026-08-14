@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const invoiceSlice = createSlice({
   name: 'invoice',
   initialState: {
-    items: [],
+    items: [] as any[],
   },
   reducers: {
     addItem: (state, action) => {
