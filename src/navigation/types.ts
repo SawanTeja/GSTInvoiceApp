@@ -2,10 +2,15 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
+export type SelectedItem = {
+  id: string;
+  quantity: number;
+};
+
 export type SalesStackParamList = {
   SalesDashboard: undefined;
-  CreateInvoice: undefined;
-  ItemSelection: undefined;
+  CreateInvoice: { selectedItems?: SelectedItem[] };
+  ItemSelection: { initialSelectedItems: SelectedItem[] };
   InvoiceView: { invoiceId: string };
 };
 
