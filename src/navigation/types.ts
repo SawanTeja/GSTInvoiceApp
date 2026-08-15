@@ -9,7 +9,7 @@ export type SelectedItem = {
 
 export type SalesStackParamList = {
   SalesDashboard: undefined;
-  CreateInvoice: { selectedItems?: SelectedItem[] };
+  CreateInvoice: { invoiceId?: string; selectedItems?: SelectedItem[] };
   ItemSelection: { initialSelectedItems: SelectedItem[] };
   InvoiceView: { invoiceId: string };
 };
