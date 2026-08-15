@@ -1,112 +1,114 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { addInvoice, updateInvoice, deleteInvoice, selectInvoices, selectInvoiceCount, selectTotalSales } from '../../store/invoiceSlice';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, Dimensions } from 'react-native';
+import { useSelector } from 'react-redux';
+import { BarChart, LineChart } from 'react-native-gifted-charts';
+import { selectInvoices, selectTotalSales, selectInvoiceCount } from '../../store/invoiceSlice';
+import { Invoice } from '../../types/invoice';
+
+const screenWidth = Dimensions.get('window').width;
 
 export const HomeScreen = () => {
-  const dispatch = useDispatch();
   const invoices = useSelector(selectInvoices);
-  const invoiceCount = useSelector(selectInvoiceCount);
   const totalSales = useSelector(selectTotalSales);
+  const invoiceCount = useSelector(selectInvoiceCount);
 
-  const handleAddTestInvoice = () => {
-    const newInvoice = {
-      id: Math.random().toString(36).substring(7),
-      invoiceNumber: `INV-${Math.floor(Math.random() * 1000)}`,
-      invoiceDate: new Date().toISOString(),
-      dueDate: new Date().toISOString(),
-      seller: { name: 'My Company', address: '123 Main St' },
-      buyer: { name: 'Customer Inc', address: '456 Market St' },
-      items: [
-        {
-          id: 'item1',
-          name: 'Consulting Services',
-          price: 1000,
-          quantity: 2,
-          gstRate: 18,
-          unit: 'hrs',
-          taxableValue: 2000,
-          cgst: 180,
-          sgst: 180,
-          igst: 0,
-          lineTotal: 2360,
-        }
-      ],
-      totals: {
-        taxableAmount: 2000,
-        cgstAmount: 180,
-        sgstAmount: 180,
-        igstAmount: 0,
-        totalAmount: 2360,
+  const { monthlySales, monthlyCount } = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    
+    // Default zero for all months
+    let salesData = months.map(m => ({ label: m, value: 0, frontColor: '#3b82f6' }));
+    let countData = months.map(m => ({ label: m, value: 0 }));
+
+    invoices.forEach((inv: Invoice) => {
+      const date = new Date(inv.invoiceDate);
+      // We'll plot all data for the current year, or fallback safely
+      if (!isNaN(date.getTime()) && date.getFullYear() === currentYear) {
+        const mIdx = date.getMonth();
+        salesData[mIdx].value += inv.totals.totalAmount;
+        countData[mIdx].value += 1;
       }
-    };
-    dispatch(addInvoice(newInvoice));
-  };
+    });
 
-  const handleUpdateLastInvoice = () => {
-    if (invoices.length > 0) {
-      const lastInvoice = invoices[invoices.length - 1];
-      const updatedInvoice = {
-        ...lastInvoice,
-        buyer: { ...lastInvoice.buyer, name: 'Updated Customer' }
-      };
-      dispatch(updateInvoice(updatedInvoice));
-    }
-  };
+    // Optional: trim to only show months up to the current month to avoid empty flatlines on the right
+    const currentMonth = new Date().getMonth();
+    salesData = salesData.slice(0, currentMonth + 1);
+    countData = countData.slice(0, currentMonth + 1);
 
-  const handleDeleteLastInvoice = () => {
-    if (invoices.length > 0) {
-      const lastInvoice = invoices[invoices.length - 1];
-      dispatch(deleteInvoice(lastInvoice.id));
-    }
-  };
+    return { monthlySales: salesData, monthlyCount: countData };
+  }, [invoices]);
 
   return (
-    <ScrollView className="flex-1 bg-white p-4">
-      <View className="items-center justify-center py-6">
-        <Text className="text-2xl font-bold text-blue-600 mb-2">GST Invoice App</Text>
-        <Text className="text-gray-500 mb-6">Setup Successful! Phase 2: Redux Data Models.</Text>
+    <ScrollView className="flex-1 bg-gray-50 p-4 pb-10">
+      <View className="mb-6 mt-4">
+        <Text className="text-3xl font-bold text-gray-800">Dashboard</Text>
+        <Text className="text-gray-500 mt-1">Your business at a glance</Text>
       </View>
 
-      <View className="bg-gray-100 p-4 rounded-xl mb-6 shadow-sm">
-        <Text className="text-lg font-semibold text-gray-800 mb-2">Redux State Stats</Text>
-        <Text className="text-gray-700">Total Invoices: <Text className="font-bold">{invoiceCount}</Text></Text>
-        <Text className="text-gray-700">Total Sales: <Text className="font-bold">₹{totalSales}</Text></Text>
+      <View className="flex-row justify-between mb-8">
+        <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1 mr-2">
+          <Text className="text-gray-500 text-sm font-medium mb-1">YTD Sales</Text>
+          <Text className="text-2xl font-bold text-blue-600">₹{totalSales.toLocaleString('en-IN')}</Text>
+        </View>
+        <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1 ml-2">
+          <Text className="text-gray-500 text-sm font-medium mb-1">Invoices</Text>
+          <Text className="text-2xl font-bold text-gray-800">{invoiceCount}</Text>
+        </View>
       </View>
 
-      <View className="flex-row flex-wrap justify-between mb-6">
-        <TouchableOpacity 
-          onPress={handleAddTestInvoice}
-          className="bg-blue-500 py-3 px-4 rounded-lg w-[48%] mb-4 items-center shadow"
-        >
-          <Text className="text-white font-semibold">Add Invoice</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          onPress={handleUpdateLastInvoice}
-          className="bg-yellow-500 py-3 px-4 rounded-lg w-[48%] mb-4 items-center shadow"
-        >
-          <Text className="text-white font-semibold">Update Last</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          onPress={handleDeleteLastInvoice}
-          className="bg-red-500 py-3 px-4 rounded-lg w-full items-center shadow"
-        >
-          <Text className="text-white font-semibold">Delete Last Invoice</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="mb-10">
-        <Text className="text-lg font-semibold text-gray-800 mb-3">Invoices in State:</Text>
-        {invoices.map((inv) => (
-          <View key={inv.id} className="bg-white border border-gray-200 p-3 rounded-lg mb-2 shadow-sm">
-            <Text className="font-bold text-gray-800">{inv.invoiceNumber}</Text>
-            <Text className="text-sm text-gray-600">Buyer: {inv.buyer.name}</Text>
-            <Text className="text-sm text-gray-600">Total: ₹{inv.totals.totalAmount}</Text>
+      {invoices.length === 0 ? (
+        <View className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 items-center justify-center mt-4">
+          <Text className="text-4xl mb-3">📊</Text>
+          <Text className="text-gray-500 text-lg font-medium">No sales data yet</Text>
+          <Text className="text-gray-400 text-sm mt-1 text-center">Create some invoices to see your monthly charts here.</Text>
+        </View>
+      ) : (
+        <>
+          <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 pb-6">
+            <Text className="text-lg font-bold text-gray-800 mb-6">Monthly Sales</Text>
+            <View className="items-center">
+              <BarChart
+                data={monthlySales}
+                width={screenWidth - 90}
+                height={200}
+                barWidth={22}
+                noOfSections={4}
+                barBorderRadius={4}
+                frontColor="#3b82f6"
+                yAxisThickness={0}
+                xAxisThickness={1}
+                xAxisColor="#e5e7eb"
+                yAxisTextStyle={{ color: '#6b7280', fontSize: 10 }}
+                xAxisLabelTextStyle={{ color: '#6b7280', fontSize: 11 }}
+                isAnimated
+              />
+            </View>
           </View>
-        ))}
-      </View>
+
+          <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 pb-6">
+            <Text className="text-lg font-bold text-gray-800 mb-6">Invoice Count</Text>
+            <View className="items-center">
+              <LineChart
+                data={monthlyCount}
+                width={screenWidth - 90}
+                height={180}
+                color="#8b5cf6"
+                thickness={3}
+                dataPointsColor="#8b5cf6"
+                noOfSections={4}
+                yAxisThickness={0}
+                xAxisThickness={1}
+                xAxisColor="#e5e7eb"
+                yAxisTextStyle={{ color: '#6b7280', fontSize: 10 }}
+                xAxisLabelTextStyle={{ color: '#6b7280', fontSize: 11 }}
+                isAnimated
+                curved
+              />
+            </View>
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 };
+
