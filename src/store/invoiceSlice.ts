@@ -26,10 +26,16 @@ const invoiceSlice = createSlice({
     deleteInvoice: (state, action: PayloadAction<string>) => {
       state.invoices = state.invoices.filter(inv => inv.id !== action.payload);
     },
+    markAsPaid: (state, action: PayloadAction<string>) => {
+      const invoice = state.invoices.find(inv => inv.id === action.payload);
+      if (invoice) {
+        invoice.status = 'paid';
+      }
+    },
   },
 });
 
-export const { addInvoice, updateInvoice, deleteInvoice } = invoiceSlice.actions;
+export const { addInvoice, updateInvoice, deleteInvoice, markAsPaid } = invoiceSlice.actions;
 
 // Selectors
 export const selectInvoices = (state: RootState) => state.invoice.invoices;

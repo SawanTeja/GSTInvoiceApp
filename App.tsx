@@ -7,10 +7,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from './src/store';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
+import { StatusBar } from 'react-native';
+
 function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
+        <StatusBar barStyle="dark-content" />
         <NavigationContainer>
           <RootNavigator />
         </NavigationContainer>

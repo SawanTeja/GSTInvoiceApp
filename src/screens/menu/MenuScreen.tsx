@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootTabParamList } from '../../navigation/types';
 
 type NavigationProp = BottomTabNavigationProp<RootTabParamList, 'Menu'>;
 
 export const MenuScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
 
   const menuItems = [
     { title: 'Home', route: 'Home' as const, icon: '🏠' },
@@ -17,23 +19,23 @@ export const MenuScreen = () => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-4">
-      <View className="mb-6 mt-4">
-        <Text className="text-3xl font-bold text-gray-800">Menu</Text>
+    <ScrollView style={s.container} contentContainerStyle={{ paddingTop: insets.top }}>
+      <View style={s.header}>
+        <Text style={s.headerTitle}>Menu</Text>
       </View>
 
-      <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <View style={s.listCard}>
         {menuItems.map((item, index) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={item.title}
             onPress={() => navigation.navigate(item.route as any)}
-            className={`flex-row items-center p-4 ${index !== menuItems.length - 1 ? 'border-b border-gray-100' : ''}`}
+            style={[s.menuItem, index !== menuItems.length - 1 && s.menuItemBorder]}
           >
-            <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center mr-4">
-              <Text className="text-xl">{item.icon}</Text>
+            <View style={s.iconBox}>
+              <Text style={s.iconText}>{item.icon}</Text>
             </View>
-            <Text className="text-lg font-medium text-gray-800 flex-1">{item.title}</Text>
-            <Text className="text-gray-400 font-bold text-lg">›</Text>
+            <Text style={s.menuTitle}>{item.title}</Text>
+            <Text style={s.chevron}>›</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -41,3 +43,15 @@ export const MenuScreen = () => {
   );
 };
 
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f9fafb', padding: 16 },
+  header: { marginBottom: 24, marginTop: 16 },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#1f2937' },
+  listCard: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#f3f4f6', overflow: 'hidden', elevation: 1 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  iconBox: { width: 40, height: 40, backgroundColor: '#eff6ff', borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  iconText: { fontSize: 20 },
+  menuTitle: { fontSize: 16, fontWeight: '500', color: '#1f2937', flex: 1 },
+  chevron: { color: '#9ca3af', fontWeight: '700', fontSize: 20 },
+});
